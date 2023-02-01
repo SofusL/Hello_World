@@ -7,11 +7,46 @@ olNS = olApp.GetNameSpace('MAPI')
 mailItem = olApp.CreateItem(0)
 mailItem.Subject = 'Hello 123'
 mailItem.BodyFormat = 1
-mailItem.Body = 'Hello There'
 mailItem.To = '<ob@timevat.com>'
 mailItem.Cc = '<vl@timevat.con>'
 mailItem.Bcc = '<vl@timevat.con>'
 mailItem.Sensitivity  = 2
+
+mailItem.HTMLBody = """
+
+<html>
+  <body>
+    <p>
+      <font size="4" face="Arial">
+Hej,
+
+I forbindelse med afstemning af jeres norske MVA for X måned 2022 mangler vi følgende bilag:
+
+Samlefaktura:
+
+Og eventuelt underliggende bilag tilhørende den manglende samlefaktura
+
+Salgsfaktura:
+
+
+Du bedes sende bilagene hurtigst muligt og senest den 15. Xmåned til invoice@timevat.com, da bilagene er en forudsætning for at vi kan afstemme jeres norske MVA. Efter denne dato vil der blive pålagt et hastegebyr.
+
+Med venlig hilsen / Best regards,
+
+Sofus Lynge
+VAT Operation
+
+Phone		+45 7021 3000
+E- mail 	sl@timevat.com
+Web			www.timevat.com
+Address		Høje Taastrup Boulevard 52, DK-2630 Taastrup
+Cvr			40 68 87 65
+
+      </font>
+    </p>
+  </body>
+</html>
+"""
 
 choice = input("Do you want to save, display or send?")
 
@@ -28,8 +63,7 @@ elif choice.lower() == "send":
   mailItem.Send()
 
 else:
-  print("Invalid choice")
-
+  print("Invalid choice. Try again")
 
 # mailItem.Display()
 # mailItem.Save()
