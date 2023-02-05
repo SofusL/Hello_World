@@ -1,73 +1,81 @@
+import os
 import win32com.client as win32
+import logging
 
+# set up logging
+logging.basicConfig(filename='email_script.log', level=logging.DEBUG)
+
+# constants
+SUBJECT = "Tolddeklarationsoversigt {} ({})"
+ATTACHMENT_NAME = "{} Tolddeklarationsoversigt.txt"
+ROOT_DIR = "C:\\Users\\soffe\\Desktop\\"
+BODY = "Template2"
+
+
+date = "2023 01" # --------------------------------------------------------- NEEDS TO BE CHANGED MONTHLY
+month = "januar" # --------------------------------------------------------- NEEDS TO BE IN DANISH AND WITH ALL TEXT IN LOWERCASE
+
+# configuration data
+CLIENTS = [
+    ('1', 'Sofus', 'SofusFolder'),
+    ('2', 'Oliver', 'OliverFolder'),
+    ('3', 'Villads', 'VilladsFolder')
+]
+
+# create outlook application instance
 olApp = win32.Dispatch('Outlook.Application')
 olNS = olApp.GetNameSpace('MAPI')
 
-mailItem = olApp.CreateItem(0)
-mailItem.BodyFormat = 1
-mailItem.Sensitivity  = 2
+def create_mail_item():
+    """Creates a new mail item in Outlook"""
+    mailItem = olApp.CreateItem(0)
+    mailItem.BodyFormat = 1
+    mailItem.Sensitivity  = 2
+    return mailItem
 
-# ---------------------------------------------------------------------
+def find_path(name, path):
+    """Searches for a file in the specified path and returns its full path"""
+    for root, dirs, files in os.walk(path):
+        if name in dirs or name in files:
+            return root
+    return None
 
-data = [
-('Oliver','Bregneberg','ob@timevat.com'),
-('Sofus','Lynge','sl@timevat.com'),
-('Villads','Lund','vl@timevat.com')
-  ]
+def send_email(client, date):
+    """Sends an email with an attachment to the specified client"""
+    found = False
+    for record in CLIENTS:
+        if client == record[0]:
+            client_name = record[1]
+            folder_name = record[2]
+            found = True
 
-navn = input("Who do you want to send this e-mail to?")
+            target_path = find_path(ATTACHMENT_NAME.format(date), ROOT_DIR + folder_name)
+            if target_path:
+                mailItem = create_mail_item()
+                mailItem.Subject = SUBJECT.format(date, client_name)
+                attachment = (target_path + "\\" + ATTACHMENT_NAME.format(date))
+                mailItem.Attachments.Add(attachment)
+                mailItem.HTMLBody = BODY
 
-for record in data:
-  if navn == record[0]:
-    print("Sender e-mail til", record[0], record[1])
-    mailItem.To = '<ob@timevat.com>'
+                choice = input("Do you want to display or send the email? ")
+                if choice.lower() == "display":
+                    mailItem.Display()
+                elif choice.lower() == "send":
+                    mailItem.Send()
+                else:
+                    print("Invalid choice. Try again.")
+                    return
+            else:
+                print(f"{ATTACHMENT_NAME.format(date)} not found.")
+                logging.error(f"{ATTACHMENT_NAME.format(date)} not found in {ROOT_DIR + folder_name}")
+                return
+            break
+    if not found:
+        print(f"Client with VAT number {client} not found.")
+        logging.error(f"Client with VAT number {client} not found.")
 
-# ---------------------------------------------------------------------
+# prompt user for client VAT number and date
+client = input("Enter the VAT number of the client: ")
 
-choice = input("What E-mail template do u want to use? (1, 2 or 3)")
-
-if choice.lower() == "1":  
-  print("1")
-  mailItem.HTMLBody = "Template1"
-
-elif choice.lower() == "2":
-  print("2")
-  mailItem.HTMLBody = "Template2"
-
-elif choice.lower() == "3":
-  print("1")
-  mailItem.HTMLBody = "Template3"
-
-else:
-  print("Invalid choice. Try again")
-
-# ---------------------------------------------------------------------
-
-Periode = input("Enter the period you want to use: (YYYY MM)")
-Customer = input("Enter the period you want to use: (YYYY MM)")
-mailItem.Subject = "Tolddeklarationsoversigt " + Periode + " ("+Customer+")"
-
-# ---------------------------------------------------------------------
-
-choice = input("Do you want to save, display or send?")
-
-if choice.lower() == "display":  
-  print("Display")
-  mailItem.Display()
-
-elif choice.lower() == "save":
-  print("Save")
-  mailItem.Save()
-
-elif choice.lower() == "send":
-  print("Send")
-  mailItem.Send()
-
-else:
-  print("Invalid choice. Try again")
-
-# Diffrent outputs 
-
-# mailItem.Display()
-# mailItem.Save()
-# mailItem.Send()
+# send email to the specified client
+send_email(client, date)
