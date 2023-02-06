@@ -1,6 +1,7 @@
 import os
 import win32com.client as win32
 import logging
+import pandas as pd
 
 # set up logging
 logging.basicConfig(filename='email_script.log', level=logging.DEBUG)
@@ -11,16 +12,12 @@ ATTACHMENT_NAME = "{} Tolddeklarationsoversigt.txt"
 ROOT_DIR = "C:\\Users\\soffe\\Desktop\\"
 BODY = "Template2"
 
-
 date = "2023 01" # --------------------------------------------------------- NEEDS TO BE CHANGED MONTHLY
 month = "januar" # --------------------------------------------------------- NEEDS TO BE IN DANISH AND WITH ALL TEXT IN LOWERCASE
 
-# configuration data
-CLIENTS = [
-    ('1', 'Sofus', 'SofusFolder'),
-    ('2', 'Oliver', 'OliverFolder'),
-    ('3', 'Villads', 'VilladsFolder')
-]
+# read configuration data from an excel file using pandas
+df = pd.read_excel("clients.xlsx")
+CLIENTS = [(str(row['VAT']), row['Name'], row['Folder']) for i, row in df.iterrows()]
 
 # create outlook application instance
 olApp = win32.Dispatch('Outlook.Application')
@@ -70,6 +67,7 @@ def send_email(client, date):
                 logging.error(f"{ATTACHMENT_NAME.format(date)} not found in {ROOT_DIR + folder_name}")
                 return
             break
+
     if not found:
         print(f"Client with VAT number {client} not found.")
         logging.error(f"Client with VAT number {client} not found.")
